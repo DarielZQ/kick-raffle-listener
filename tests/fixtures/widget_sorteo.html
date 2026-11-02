@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- Widget de sorteo SINTÉTICO para las pruebas de auto-entrada: estructura mínima inventada
+     (bloque <section> con pestañas por sección, campo de contraseña y botón "Participar en …"). -->
+<html lang="es">
+<head><meta charset="utf-8"><title>Sitio de ejemplo (réplica de pruebas)</title></head>
+<body>
+  <header>
+    <button id="login" hidden>Iniciar Sesión</button>
+  </header>
+  <section>
+    <p>Sorteo de ejemplo</p>
+    <div>
+      <button id="tab-no_subs" aria-pressed="true">No Subs <span>•</span></button>
+      <button id="tab-subs" aria-pressed="false">Subs <span>•</span></button>
+    </div>
+    <div id="body"></div>
+    <p>Premio de ejemplo</p>
+  </section>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const open = (params.get("open") || "no_subs").split(",");
+    if (params.get("logged") === "0") document.getElementById("login").hidden = false;
+    const label = { no_subs: "No Subs", subs: "Subs" };
+    let joined = {};
+
+    function render(section) {
+      for (const s of ["no_subs", "subs"]) {
+        document.getElementById("tab-" + s).setAttribute("aria-pressed", String(s === section));
+      }
+      const body = document.getElementById("body");
+      if (!open.includes(section) || joined[section]) {
+        body.innerHTML = joined[section]
+          ? "<p>Ya estás participando.</p>"
+          : `<p>No hay sorteo abierto en ${label[section]} ahora mismo.</p>`;
+        return;
+      }
+      body.innerHTML = `
+        <p>Sorteo abierto · 4 ganadores</p>
+        <form>
+          <input placeholder="Contraseña del sorteo">
+          <button type="submit">Participar en ${label[section]}</button>
+        </form>`;
+      body.querySelector("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const password = body.querySelector("input").value;
+        const r = await fetch("/api/sorteo/join", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section, password }),
+        });
+        if (r.ok) { joined[section] = true; render(section); }
+      });
+    }
+    document.getElementById("tab-no_subs").onclick = () => render("no_subs");
+    document.getElementById("tab-subs").onclick = () => render("subs");
+    render("no_subs");
+  </script>
+</body>
+</html>

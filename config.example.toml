@@ -1,0 +1,94 @@
+# Copia este archivo a config.toml y ajústalo. config.toml no se sube a git (puede llevar el webhook).
+# Los valores entre <…> y las URLs de sitio.example son marcadores: el bot no arranca hasta que los cambies.
+
+[stream]
+source = "kick"            # "kick" (streamlink+ffmpeg) o "loopback" (lo que suena en el PC)
+channel = "<canal>"        # nombre del canal de Kick (lo que va tras kick.com/)
+quality = "worst"          # solo interesa el audio
+
+[stt]
+model = "large-v3-turbo"   # si va lento: "medium" o "small"
+device = "cuda"            # "cuda" o "cpu"
+compute_type = "int8_float16"
+language = "es"
+step_seconds = 3.0         # cada cuánto se transcribe
+holdback_seconds = 1.5     # no se confirma texto más reciente que esto (puede cambiar)
+max_window_seconds = 25.0
+
+[buffer]
+audio_seconds = 300        # audio guardado para re-analizar hacia atrás
+transcript_seconds = 600
+
+[extract]
+window_seconds = 90        # texto que se analiza cada vez que llega texto nuevo
+min_score = 0.8            # umbral fuera de ronda (solo se usa con transcribe = "always")
+min_score_raffle = 0.6     # umbral con ronda abierta (un "pongan X" suelto, 0.5, no basta)
+
+[trigger]
+# "raffle": Whisper solo trabaja mientras hay una ronda abierta (o tras la tecla rápida).
+# "off": no carga Whisper (solo clips; sin contraseña automática ni auto-entrada).
+# "always": transcribe todo el directo. Si la contraseña se dice después de abrir la ronda,
+# "raffle" basta y ahorra GPU.
+transcribe = "raffle"
+hotkey = "<ctrl>+<alt>+p"  # formato pynput
+hotkey_seconds = 300       # cuánto transcribir tras pulsar la tecla
+reanalyze_seconds = 60     # al abrirse la ronda, también se transcribe el minuto anterior (Kick va ~10 s tarde)
+review_every_seconds = 30  # con ronda abierta, cada 30 s se repasa con más precisión…
+review_window_seconds = 60 # …el último minuto (corrige errores de la transcripción en vivo)
+listen_after_seconds = 30  # se sigue tras cerrarse la ronda (el audio de Kick va con retraso)
+# API JSON con el estado público de los sorteos del sitio (la que consulta su propia página; formato en
+# docs/research.md §4). Déjalo vacío ("") para desactivar la vigilancia de la web.
+site_url = "https://sitio.example/api/estado-publico"
+site_interval_seconds = 3.0
+
+[output]
+clipboard = true
+toast = true
+beep = true
+# Discord: URL del webhook del canal (déjala vacía para no enviar). Es secreta: ponla solo en config.toml.
+discord_webhook = ""
+discord_message = "Contraseña del sorteo: "
+discord_provisional = false  # true = enviar también las provisionales (pueden ser erróneas)
+
+[autojoin]
+# Mete la contraseña confirmada en el formulario del sitio con un Chrome propio y TU sesión.
+# Antes, una vez: raffle-listener --login (inicia sesión en la ventana y ciérrala).
+# Úsalo solo si las reglas del sitio permiten participar de forma automatizada.
+enabled = false
+page_url = "https://sitio.example/directo"     # página con el formulario del sorteo
+widget_text = "<texto del bloque del sorteo>"  # texto visible que identifica el bloque (<section>) del sorteo
+join_path = "/api/<ruta>/join"                 # ruta de la petición POST que envía la contraseña
+password_placeholder = "Contraseña del sorteo" # placeholder del campo de la contraseña
+submit_text = "Participar en"                  # el botón de enviar empieza por este texto
+login_text = "Iniciar sesión"                  # botón que solo se ve sin sesión
+sections = ["No Subs", "Subs"]  # pestañas del widget; si no hay formulario en una, se salta
+max_attempts = 3                # si la web rechaza la contraseña, prueba variantes (sin tildes…)
+profile_dir = ".browser"        # perfil de Chrome del bot (ignorado por git)
+browser_channel = "chrome"      # o "msedge"
+headless = false                # ventana invisible (Cloudflare podría bloquearla)
+start_minimized = true
+
+[clip]
+# Al abrirse una ronda: clip de audio de 20 s antes a 70 s después → Discord (mismo webhook) → se borra.
+# Se hace en memoria: nunca se guarda en el disco.
+enabled = true
+before_seconds = 20
+after_seconds = 70
+stream_delay_seconds = 8     # el audio de Kick llega unos segundos tarde respecto a la web
+delete_after_minutes = 15
+bitrate = "48k"              # MP3 mono: ~550 KB por clip de 90 s
+speed_copies = [2.0]         # además, el mismo audio a x2 (misma voz, la mitad de largo); [] para no mandarlo
+message = "Clip del sorteo (20 s antes y 70 s después de abrirse; el archivo x2 es el mismo audio al doble de velocidad). Se borra en 15 min."
+message_guess = "GUESS · Clip del Guess (20 s antes y 70 s después de abrirse; el archivo x2 es el mismo audio al doble de velocidad). Se borra en 15 min."
+
+[winners]
+# Cuando en un sorteo, Guess o cajas gana alguien de esta lista, se avisa en el mismo canal de Discord
+# mencionándolo (le llega la notificación). Pon su ID numérico de Discord (Discord → Ajustes → Avanzado →
+# Modo desarrollador; clic derecho en la persona → Copiar ID) y, si quieres, también su @ único.
+# OJO: los ganadores de las rondas por secciones ("cajas") pueden traer solo el ID (no el @): sin ID no se les reconoce.
+# Solo se avisa de ganadores confirmados y de los que salgan con el bot ya en marcha.
+enabled = true
+usernames = []   # p. ej. ["usuarioejemplo1", "123456789012345678"]
+# {mention} = mención real, {username} = @, {sorteo}, {premio}, {fecha}, {hora}
+message = "{mention} ¡has ganado! · Dónde: {sorteo}{premio} · {fecha} a las {hora}"
+rounds_title = "Cajas ({section})"  # cómo se llaman en el aviso las rondas por secciones

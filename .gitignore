@@ -1,0 +1,32 @@
+# Entorno y cachés
+.venv/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+
+# Configuración local y secretos (canal, URLs del sitio, webhook de Discord)
+config.toml
+*.local.toml
+.env
+.env.*
+
+# Sesión del navegador del bot, cookies y sesiones
+.browser/
+cookies*.txt
+*.cookies
+*.session
+sessions/
+
+# Datos, logs, audio y clips
+data/
+logs/
+*.log
+clips/
+*.wav
+*.mp3
+*.m4a
+*.ogg
+*.flac
+*.mp4
+*.ts
+*.m3u8
