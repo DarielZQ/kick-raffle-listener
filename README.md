@@ -47,15 +47,29 @@ Todo corre en tu PC y es gratis (Whisper en la GPU con faster-whisper). Nada de 
 
 ## Instalación
 
-Requisitos: Windows, Python 3.11+, ffmpeg en el PATH y, opcionalmente, una GPU NVIDIA.
+Requisitos:
 
-```bash
-powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
+- Windows 10/11 y Python 3.11 o superior (`python` en el PATH).
+- [FFmpeg](https://ffmpeg.org/download.html) en el PATH (comprueba con `ffmpeg -version`).
+- Opcional: una GPU NVIDIA para transcribir con CUDA (sin ella usa la CPU) y Google Chrome si vas a usar la
+  auto-entrada.
+
+Desde la carpeta del proyecto, en PowerShell o CMD:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 
-Esto crea `.venv`, instala dependencias (incluidas las DLL de CUDA), copia `config.example.toml` a
-`config.toml` y crea el comando global `raffle-listener`. La primera ejecución descarga el modelo de Whisper
-(~1,6 GB).
+El script:
+
+1. Crea el entorno virtual `.venv` (si ya existe, lo reutiliza).
+2. Actualiza pip e instala el proyecto con todos los extras (`cuda`, `loopback`, `toast`, `autojoin`, `dev`),
+   incluidas las DLL de CUDA.
+3. Copia `config.example.toml` a `config.toml` solo si aún no existe (no pisa tu configuración).
+4. Crea el comando global `raffle-listener` (un lanzador en `%LOCALAPPDATA%\Microsoft\WindowsApps`).
+
+Se puede volver a ejecutar sin riesgo para actualizar dependencias. La primera ejecución del bot descarga el
+modelo de Whisper (~1,6 GB).
 
 Sin el script, con cualquier gestor de entornos:
 
