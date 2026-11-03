@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Pruebas (Windows, Python 3.11)
+    # El bot depende de Windows (winsound, WASAPI, notificaciones).
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Instalar Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      # Igual que scripts/setup.ps1, pero sin el extra "cuda": en CI no hay GPU.
+      # No se descarga el modelo de Whisper: las pruebas no lo cargan.
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[loopback,toast,autojoin,dev]"
+
+      # Las pruebas que necesitan ffmpeg o Chrome se omiten con su motivo si el runner no los tiene.
+      - name: Ejecutar pruebas
+        run: python -m pytest -q -rs

@@ -1,5 +1,7 @@
 # Raffle Listener
 
+[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+
 Escucha un directo de **Kick**, transcribe en local lo que se dice y detecta la **contraseña de los sorteos**
 que el streamer dice en voz alta ("la contraseña es *patata de papa*…"). Cuando la encuentra, avisa con una
 notificación y un sonido, la **copia al portapapeles** y, si quieres, la **envía a un canal de Discord**
@@ -44,6 +46,7 @@ Todo corre en tu PC y es gratis (Whisper en la GPU con faster-whisper). Nada de 
 
 - **pytest**: pruebas automáticas con transcripciones y un widget HTML sintéticos.
 - **venv + pip** (setuptools como backend): entorno aislado e instalación del paquete en modo editable.
+- **GitHub Actions**: integración continua que ejecuta las pruebas en Windows en cada push y pull request.
 
 ## Instalación
 
@@ -193,6 +196,10 @@ Si caduca, el bot avisa ("NO hay sesión") y basta con repetir `--login`.
 Las transcripciones de `tests/fixtures/` y el widget HTML de las pruebas de auto-entrada son **sintéticos**
 (inventados); las pruebas de auto-entrada usan un dominio falso y no salen a internet (se saltan si no hay
 Playwright o Chrome).
+
+En GitHub Actions (`.github/workflows/ci.yml`) las pruebas corren en `windows-latest` con Python 3.11, sin el
+extra `cuda` ni el modelo de Whisper. Las que necesitan `ffmpeg` en el PATH, Playwright o Chrome se omiten con
+su motivo (`pytest -rs` lo muestra) cuando faltan.
 
 ## Documentación
 

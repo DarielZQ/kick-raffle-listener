@@ -26,7 +26,7 @@ def test_attempts_order():
 
 @pytest.fixture(scope="module")
 def browser():
-    sync_api = pytest.importorskip("playwright.sync_api")
+    sync_api = pytest.importorskip("playwright.sync_api", reason="Playwright no está instalado (extra autojoin)")
     with sync_api.sync_playwright() as p:
         try:
             b = p.chromium.launch(channel="chrome", headless=True)

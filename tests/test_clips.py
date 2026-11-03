@@ -1,5 +1,6 @@
 import json
 import math
+import shutil
 import subprocess
 import threading
 import time
@@ -14,6 +15,10 @@ from raffle_listener.config import ClipConfig
 
 SR = 16_000
 
+# Codificar y medir los MP3 necesita el ejecutable de ffmpeg; en una máquina sin él (p. ej. en CI) se omiten.
+needs_ffmpeg = pytest.mark.skipif(shutil.which("ffmpeg") is None,
+                                  reason="requiere ffmpeg en el PATH para codificar y medir los MP3")
+
 
 def tone(seconds: float, start: float = 0.0) -> np.ndarray:
     t = np.arange(int(seconds * SR)) / SR + start
@@ -26,12 +31,14 @@ def mp3_seconds(data: bytes) -> float:
     return len(pcm) / 2 / SR
 
 
+@needs_ffmpeg
 def test_encode_mp3_in_memory():
     data = encode_mp3(tone(3), SR, "48k")
     assert data[:3] == b"ID3" or data[0] == 0xFF
     assert abs(mp3_seconds(data) - 3) < 0.2
 
 
+@needs_ffmpeg
 def test_clip_window_is_before_and_after_the_opening():
     buf = AudioRingBuffer(60)
     buf.write(tone(30))
@@ -41,6 +48,7 @@ def test_clip_window_is_before_and_after_the_opening():
     assert abs(mp3_seconds(data) - 27) < 0.2
 
 
+@needs_ffmpeg
 def test_clip_waits_for_audio_still_arriving():
     buf = AudioRingBuffer(60)
     buf.write(tone(5))
@@ -100,11 +108,13 @@ def test_upload_sends_the_mp3_and_returns_the_message_id(http):
     assert headers["Content-type"].startswith("multipart/form-data; boundary=")
 
 
+@needs_ffmpeg
 def test_x2_copy_is_half_as_long():
     data = encode_mp3(tone(10), SR, "48k", speed=2.0)
     assert abs(mp3_seconds(data) - 5) < 0.2
 
 
+@needs_ffmpeg
 def test_clip_files_normal_and_x2():
     buf = AudioRingBuffer(60)
     buf.write(tone(30))
@@ -126,6 +136,7 @@ def test_message_is_deleted_after_the_delay_and_on_exit(http):
     assert ("DELETE", "https://discord.test/api/webhooks/1/abc/messages/222") in [r[:2] for r in http.requests]
 
 
+@needs_ffmpeg
 def test_full_clip_goes_to_discord_without_writing_files(http, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     buf = AudioRingBuffer(60)
