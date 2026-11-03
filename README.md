@@ -16,6 +16,35 @@ Todo corre en tu PC y es gratis (Whisper en la GPU con faster-whisper). Nada de 
 > desactivada y activarla es decisión y responsabilidad de quien lo usa. El proyecto no está afiliado a
 > ningún streamer, sitio ni plataforma.
 
+## Tecnologías
+
+**Lenguajes**
+
+- **Python 3.11+**: todo el bot (audio, transcripción, extracción de la contraseña, avisos y auto-entrada).
+- **PowerShell**: instalación en un paso con `scripts/setup.ps1`.
+- **Batch (CMD)**: lanzador `raffle-listener.cmd` para arrancarlo desde cualquier consola.
+
+**Librerías y plataforma**
+
+- **faster-whisper** (Whisper sobre CTranslate2): transcripción local del audio en español. Usa la GPU con
+  **CUDA** si hay una NVIDIA (el extra `cuda` instala cuBLAS/cuDNN) y, si no, pasa a CPU.
+- **Streamlink + FFmpeg**: Streamlink lee el directo de Kick y FFmpeg lo convierte a PCM 16 kHz mono; FFmpeg
+  también comprime en memoria los clips a MP3.
+- **NumPy**: búfer circular de audio en memoria (los últimos minutos) y manejo de las muestras.
+- **soundcard** (opcional, extra `loopback`): captura con WASAPI lo que suena por los altavoces, como
+  alternativa a Streamlink.
+- **Playwright** (opcional, extra `autojoin`): controla un Chrome propio del bot (motor Chromium) con tu
+  sesión para la inscripción automática en el sorteo.
+- **Webhooks de Discord**: envío de la contraseña, de los clips de audio y de los avisos de ganadores.
+- **pynput**: tecla rápida global `Ctrl+Alt+P` para activar la escucha a mano.
+- **pyperclip**: copia la contraseña al portapapeles.
+- **win11toast** (opcional, extra `toast`) y **winsound**: notificación de Windows y pitido de aviso.
+
+**Herramientas**
+
+- **pytest**: pruebas automáticas con transcripciones y un widget HTML sintéticos.
+- **venv + pip** (setuptools como backend): entorno aislado e instalación del paquete en modo editable.
+
 ## Instalación
 
 Requisitos: Windows, Python 3.11+, ffmpeg en el PATH y, opcionalmente, una GPU NVIDIA.
